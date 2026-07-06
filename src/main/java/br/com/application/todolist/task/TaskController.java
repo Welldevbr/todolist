@@ -1,6 +1,7 @@
 package br.com.application.todolist.task;
 
 import java.util.Map;
+import java.util.UUID;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -8,6 +9,8 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+
+import jakarta.servlet.http.HttpServletRequest;
 
 @RestController
 @RequestMapping("/tasks")
@@ -20,7 +23,7 @@ public class TaskController {
   }
 
   @PostMapping("/")
-  public ResponseEntity<?> create(@RequestBody TaskModel task) {
+  public ResponseEntity<?> create(@RequestBody TaskModel task, HttpServletRequest request) {
     var taskExisting = this.taskRepository.findByTitle(task.getTitle());
 
     if (taskExisting != null) {
@@ -28,6 +31,10 @@ public class TaskController {
           "error", "Bad Request",
           "message", "Task already exists"));
     }
+
+    var userId = request.getAttribute("idUser");
+
+    task.setUserId(((UUID) userId));
 
     var taskCreated = this.taskRepository.save(task);
     return ResponseEntity.status(HttpStatus.CREATED).body(Map.of(
