@@ -1,5 +1,6 @@
 package br.com.application.todolist.task;
 
+import java.time.LocalDateTime;
 import java.util.Map;
 import java.util.UUID;
 
@@ -33,8 +34,22 @@ public class TaskController {
     }
 
     var userId = request.getAttribute("idUser");
-
     task.setUserId(((UUID) userId));
+
+    var currentDate = LocalDateTime.now();
+    var startedAt = task.getStartedAt();
+
+    if (currentDate.isAfter(startedAt) || currentDate.isAfter(task.getFinishedAt())) {
+      return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of(
+          "error", "Bad Request",
+          "message", "The start/finishe date must be after the current date"));
+    }
+
+    if (startedAt.isAfter(task.getFinishedAt())) {
+      return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of(
+          "error", "Bad Request",
+          "message", "The fineshe date must be after the sart date"));
+    }
 
     var taskCreated = this.taskRepository.save(task);
     return ResponseEntity.status(HttpStatus.CREATED).body(Map.of(
