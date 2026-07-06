@@ -1,11 +1,13 @@
 package br.com.application.todolist.task;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -55,5 +57,12 @@ public class TaskController {
     return ResponseEntity.status(HttpStatus.CREATED).body(Map.of(
         "message", "Task created successfully",
         "task", taskCreated));
+  }
+
+  @GetMapping("/")
+  public List<TaskModel> list(HttpServletRequest request) {
+    var userId = request.getAttribute("idUser");
+    var tasks = this.taskRepository.findByUserId((UUID) userId);
+    return tasks;
   }
 }
