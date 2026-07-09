@@ -83,6 +83,18 @@ public class TaskController {
           "message", "User not authenticated"));
     }
 
+    if (task.getTitle() != null) {
+      var taskWithSameTitle = this.taskRepository.findByTitleAndUserId(
+          task.getTitle(),
+          (UUID) userId);
+
+      if (taskWithSameTitle.isPresent() && !taskWithSameTitle.get().getId().equals(id)) {
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of(
+            "error", "Bad Request",
+            "message", "Task title already exists"));
+      }
+    }
+
     var taskOptional = this.taskRepository.findByIdAndUserId(id, (UUID) userId);
 
     if (taskOptional.isEmpty()) {
@@ -93,7 +105,7 @@ public class TaskController {
 
     var taskToUpdate = taskOptional.get();
 
-    Utils.copyNonNullProperties(task, taskToUpdate);
+    Utils.copyNonNullProperties(task, taskToUpdate, "id", "userId", "createdAt");
 
     var taskUpdated = this.taskRepository.save(taskToUpdate);
 
