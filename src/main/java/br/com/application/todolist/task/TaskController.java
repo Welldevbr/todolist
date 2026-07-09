@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import br.com.application.todolist.utils.Utils;
 import jakarta.servlet.http.HttpServletRequest;
 
 @RestController
@@ -73,6 +74,7 @@ public class TaskController {
       @PathVariable UUID id,
       @RequestBody TaskModel task,
       HttpServletRequest request) {
+
     var userId = request.getAttribute("idUser");
 
     if (userId == null) {
@@ -81,7 +83,7 @@ public class TaskController {
           "message", "User not authenticated"));
     }
 
-    var taskOptional = this.taskRepository.findByIdAndUserId((UUID) id, (UUID) userId);
+    var taskOptional = this.taskRepository.findByIdAndUserId(id, (UUID) userId);
 
     if (taskOptional.isEmpty()) {
       return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
@@ -89,65 +91,11 @@ public class TaskController {
           "message", "Task not found"));
     }
 
-    var taskUpdate = taskOptional.get();
+    var taskToUpdate = taskOptional.get();
 
-    if (task.getTitle() != null) {
-      var taskWithSameTitle = this.taskRepository.findByTitleAndUserId(task.getTitle(), (UUID) userId);
+    Utils.copyNonNullProperties(task, taskToUpdate);
 
-      if (taskWithSameTitle.isPresent() && taskWithSameTitle.get().getId().equals(id)) {
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of(
-            "error", "Bad Request",
-            "message", "Task title already exists"));
-      }
-
-      taskUpdate.setTitle(task.getTitle());
-    }
-
-    if (task.getDescription() != null) {
-      taskUpdate.setDescription(task.getDescription());
-    }
-
-    if (task.getPriority() != null) {
-      taskUpdate.setPriority(task.getPriority());
-    }
-
-    var startedAt = task.getStartedAt() != null
-        ? task.getStartedAt()
-        : taskUpdate.getStartedAt();
-
-    var finishedAt = task.getFinishedAt() != null
-        ? task.getFinishedAt()
-        : taskUpdate.getFinishedAt();
-
-    var currentDate = LocalDateTime.now();
-
-    if (startedAt != null && startedAt.isBefore(currentDate)) {
-      return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of(
-          "error", "Bad Request",
-          "message", "The start date must be after the current date"));
-    }
-
-    if (finishedAt != null && finishedAt.isBefore(currentDate)) {
-      return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of(
-          "error", "Bad Request",
-          "message", "The finish date must be after the current date"));
-    }
-
-    if (startedAt != null && finishedAt != null && startedAt.isAfter(finishedAt)) {
-      return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of(
-          "error", "Bad Request",
-          "message", "The finish date must be after the start date"));
-    }
-
-    if (task.getStartedAt() != null) {
-      taskUpdate.setStartedAt(task.getStartedAt());
-    }
-
-    if (task.getFinishedAt() != null) {
-      taskUpdate.setFinishedAt(task.getFinishedAt());
-    }
-
-    var taskUpdated = this.taskRepository.save(taskUpdate);
+    var taskUpdated = this.taskRepository.save(taskToUpdate);
 
     return ResponseEntity.ok(Map.of(
         "message", "Task updated successfully",
