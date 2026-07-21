@@ -17,6 +17,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import br.com.application.todolist.utils.Utils;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.validation.Valid;
 
 @RestController
 @RequestMapping("/tasks")
@@ -29,7 +30,9 @@ public class TaskController {
   }
 
   @PostMapping("/")
-  public ResponseEntity<?> create(@RequestBody TaskModel task, HttpServletRequest request) {
+  public ResponseEntity<?> create(
+      @Valid @RequestBody TaskModel task,
+      HttpServletRequest request) {
     var taskExisting = this.taskRepository.findByTitle(task.getTitle());
 
     if (taskExisting != null) {
@@ -71,7 +74,7 @@ public class TaskController {
 
   @PutMapping("/{id}")
   public ResponseEntity<?> update(
-      @PathVariable UUID id,
+      @Valid @PathVariable UUID id,
       @RequestBody TaskModel task,
       HttpServletRequest request) {
 
@@ -100,7 +103,7 @@ public class TaskController {
     if (taskOptional.isEmpty()) {
       return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
           "error", "Not Found",
-          "message", "Task not found"));
+          "message", "Task not found or does not belong to this user"));
     }
 
     var taskToUpdate = taskOptional.get();

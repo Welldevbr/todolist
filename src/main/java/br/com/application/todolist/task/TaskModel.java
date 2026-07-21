@@ -9,6 +9,8 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -26,7 +28,9 @@ public class TaskModel {
     private UUID id;
     private UUID userId;
 
-    @Column(unique = true, nullable = false, length = 100)
+    @NotBlank(message = "Title is required")
+    @Size(max = 50, message = "The title field must contain a maximum of 50 characters")
+    @Column(unique = true, nullable = false)
     private String title;
     private String description;
     private LocalDateTime startedAt;
@@ -35,5 +39,4 @@ public class TaskModel {
 
     @CreationTimestamp
     private LocalDateTime createdAt;
-
 }
